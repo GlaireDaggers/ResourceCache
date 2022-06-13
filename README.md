@@ -1,6 +1,6 @@
 # ResourceCache
 
-A simple but pretty powerful resource loading system created for games built on .NET
+A simple but pretty powerful resource loading system created for games built on .NET which supports async loading, hot-reloading, and mounting virtual filesystems.
 
 ## Motivation
 
