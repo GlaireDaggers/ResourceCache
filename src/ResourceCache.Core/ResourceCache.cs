@@ -8,15 +8,41 @@ using ResourceCache.Core.FS;
 namespace ResourceCache.Core
 {
     /// <summary>
+    /// Enumeration of possible resource load states
+    /// </summary>
+    public enum ResourceLoadState
+    {
+        /// <summary>
+        /// Resource is not loaded
+        /// </summary>
+        Unloaded,
+
+        /// <summary>
+        /// Resource is currently being loaded, but has not finished
+        /// </summary>
+        Loading,
+
+        /// <summary>
+        /// Resource has finished loading
+        /// </summary>
+        Loaded,
+
+        /// <summary>
+        /// Resource loading failed
+        /// </summary>
+        LoadFailed,
+    }
+
+    /// <summary>
     /// Represents a handle to a loaded resource, allowing the internal data to change if a hot-reload is performed
     /// </summary>
     /// <typeparam name="TResource">The resource type</typeparam>
     public struct ResourceHandle<TResource>
     {
         /// <summary>
-        /// Gets whether the resource is currently loaded into memory
+        /// Gets the load state of this resource
         /// </summary>
-        public bool IsLoaded => _resCache.IsLoaded(_path);
+        public ResourceLoadState State => _resCache.GetLoadState(_path);
 
         /// <summary>
         /// Gets the resource data. If the resource is not finished loading, this may block on waiting for it to finish
@@ -40,6 +66,15 @@ namespace ResourceCache.Core
         {
             _resCache = cache;
             _path = path;
+        }
+
+        /// <summary>
+        /// Make sure resource starts loading if it is not already loaded
+        /// </summary>
+        public void Load()
+        {
+            // ensure that, if this asset is not in the cache, it should start loading
+            _ = _resCache.GetAsync(typeof(TResource), _path);
         }
     }
 
@@ -105,13 +140,12 @@ namespace ResourceCache.Core
         {
             // unload asset if it gets modified. further attempts at referencing the asset will force it to re-load
 
-            if (IsLoaded(assetPath))
+            if (GetLoadState(assetPath) != ResourceLoadState.Unloaded)
             {
                 _logHandler.LogInfo($"Content file {assetPath} was modified, hot-reloading");
 
                 lock (_resCache)
                 {
-                    Type assetType = _resCache[assetPath].Result.GetType();
                     Unload(assetPath);
                 }
             }
@@ -121,7 +155,7 @@ namespace ResourceCache.Core
         {
             // if a resource file is deleted and we still have that content in memory, trigger a warning
 
-            if (IsLoaded(assetPath))
+            if (GetLoadState(assetPath) != ResourceLoadState.Unloaded)
             {
                 _logHandler.LogWarn($"Content file {assetPath} was deleted, but was still present in resource cache");
             }
@@ -150,15 +184,21 @@ namespace ResourceCache.Core
         }
 
         /// <summary>
-        /// Checks if the given resource is loaded
+        /// Gets the load state of the resource
         /// </summary>
         /// <param name="path">A path to the resource file</param>
-        /// <returns>True if the resource is currently loaded, false otherwise</returns>
-        public bool IsLoaded(string path)
+        /// <returns>The current load state of the resource</returns>
+        public ResourceLoadState GetLoadState(string path)
         {
             lock (_resCache)
             {
-                return _resCache.ContainsKey(path) && _resCache[path].IsCompleted;
+                if (!_resCache.ContainsKey(path)) return ResourceLoadState.Unloaded;
+                
+                var res = _resCache[path];
+                
+                if (res.IsCanceled || res.IsFaulted) return ResourceLoadState.LoadFailed;
+                
+                return res.IsCompleted ? ResourceLoadState.Loaded : ResourceLoadState.Loading;
             }
         }
 
@@ -201,7 +241,9 @@ namespace ResourceCache.Core
                 {
                     try
                     {
-                        return factory.loadFn(stream);
+                        var data = factory.loadFn(stream);
+                        stream.Dispose();
+                        return data;
                     }
                     catch (Exception e)
                     {
@@ -215,6 +257,7 @@ namespace ResourceCache.Core
 
                 object data = factory.loadFn(stream);
                 loader = Task.FromResult(data);
+                stream.Dispose();
             }
             
             lock (_resCache)
@@ -280,7 +323,13 @@ namespace ResourceCache.Core
             }
         }
 
-        private Stream Open(string path)
+        /// <summary>
+        /// Open a stream to the given content file
+        /// </summary>
+        /// <param name="path">Path to the content file</param>
+        /// <returns>A stream object for reading from the file</returns>
+        /// <exception cref="FileNotFoundException">Thrown if the file could not be found in any mounted filesystem</exception>
+        public Stream Open(string path)
         {
             foreach (var mountedFS in _fs)
             {
