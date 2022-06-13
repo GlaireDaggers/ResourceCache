@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net48</TargetFrameworks>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\thirdparty\FNA\FNA.csproj" />
+    <ProjectReference Include="..\..\thirdparty\QoiSharp\QoiSharp.csproj" />
+    <ProjectReference Include="..\ResourceCache.Core\ResourceCache.Core.csproj" />
+  </ItemGroup>
+
+</Project>
