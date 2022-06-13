@@ -41,10 +41,10 @@ This property will indicate what load state the resource is in, and can be used 
 ## Filesystems
 
 Another cool feature of ResourceCache was actually inspired by PhysFS, and it's that you can mount any number of abstract filesystems. An abstract filesystem is just responsible for determining whether files exist and opening streams to them. ResourceCache comes with FolderFS and ArchiveFS, which should cover most cases. FolderFS just wraps the underlying OS filesystem within a given folder, whereas ArchiveFS wraps a ZIP file and returns entries from it.
+    
+Another neat feature is that you can mount a filesystem to a "mount point", which is a virtual folder path the filesystem should be located at. So for example, if you have a ZIP file "test.zip" and it contains the file "test.txt", you can mount this file at "content" and as a result the file it contains will be accessible at "content/test.txt" when calling Load.
 
 You can write your own filesystems as well - just implement the IGameFS interface.
-
-Another neat feature is that you can mount a filesystem to a "mount point", which is a virtual folder path the filesystem should be located at. So for example, if you have a ZIP file "test.zip" and it contains the file "test.txt", you can mount this file at "content" and as a result the file it contains will be accessible at "content/test.txt" when calling Load.
 
 ## Extras
 
