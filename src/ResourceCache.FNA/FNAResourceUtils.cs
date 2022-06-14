@@ -36,48 +36,54 @@ namespace ResourceCache.FNA
             // Texture2D loader
             resourceCache.RegisterFactory((stream) =>
             {
-                byte[] header = new byte[4];
-
-                stream.Read(header, 0, header.Length);
-                stream.Seek(0, SeekOrigin.Begin);
-
-                // TODO: KTX files?
-
-                // DDS file?
-                if (header[0] == 'D' &&
-                    header[1] == 'D' &&
-                    header[2] == 'S' &&
-                    header[3] == ' ')
+                // workaround for cases where stream does not support seeking
+                using (var memStream = new MemoryStream())
                 {
-                    return Texture2D.DDSFromStreamEXT(game.GraphicsDevice, stream);
-                }
-                // QOI file?
-                else if (header[0] == 'q' &&
-                    header[1] == 'o' &&
-                    header[2] == 'i' &&
-                    header[3] == 'f')
-                {
-                    // decode QOI image and copy contents to new Texture2D
-                    byte[] data;
-                    using (var memstream = new MemoryStream())
+                    stream.CopyTo(memStream);
+
+                    byte[] header = new byte[4];
+
+                    memStream.Read(header, 0, header.Length);
+                    memStream.Seek(0, SeekOrigin.Begin);
+
+                    // TODO: KTX files?
+
+                    // DDS file?
+                    if (header[0] == 'D' &&
+                        header[1] == 'D' &&
+                        header[2] == 'S' &&
+                        header[3] == ' ')
                     {
-                        stream.CopyTo(memstream);
-                        data = memstream.ToArray();
+                        return Texture2D.DDSFromStreamEXT(game.GraphicsDevice, memStream);
                     }
-                    QoiImage imageData = QoiDecoder.Decode(data);
-                    return FromQoi(game.GraphicsDevice, imageData);
-                }
-                // something else.
-                else
-                {
-                    return Texture2D.FromStream(game.GraphicsDevice, stream);
+                    // QOI file?
+                    else if (header[0] == 'q' &&
+                        header[1] == 'o' &&
+                        header[2] == 'i' &&
+                        header[3] == 'f')
+                    {
+                        // decode QOI image and copy contents to new Texture2D
+                        byte[] data = memStream.ToArray();
+                        QoiImage imageData = QoiDecoder.Decode(data);
+                        return FromQoi(game.GraphicsDevice, imageData);
+                    }
+                    // something else.
+                    else
+                    {
+                        return Texture2D.FromStream(game.GraphicsDevice, memStream);
+                    }
                 }
             }, true);
 
             // TextureCube loader
             resourceCache.RegisterFactory((stream) =>
             {
-                return TextureCube.DDSFromStreamEXT(game.GraphicsDevice, stream);
+                // workaround for cases where stream does not support seeking
+                using (var memStream = new MemoryStream())
+                {
+                    stream.CopyTo(memStream);
+                    return TextureCube.DDSFromStreamEXT(game.GraphicsDevice, memStream);
+                }
             }, true);
 
             // SoundEffect loader
