@@ -133,6 +133,7 @@ namespace ResourceCache.Core
             if (enableHotReload)
             {
                 fs.OnFileChanged += Fs_OnFileModified;
+                fs.OnFileDeleted += Fs_OnFileDeleted;
             }
         }
 
@@ -169,7 +170,7 @@ namespace ResourceCache.Core
         /// <param name="allowMultithreading">Whether to allow this loader to be executed on a background thread</param>
         public void RegisterFactory<TResource>(Func<Stream, TResource> loader, bool allowMultithreading = true)
         {
-            _logHandler.LogInfo($"Registered factory for resource type {nameof(TResource)}");
+            _logHandler.LogInfo($"Registered factory for resource type {typeof(TResource).Name}");
 
             Func<Stream, object> loaderFn = (stream) =>
             {
