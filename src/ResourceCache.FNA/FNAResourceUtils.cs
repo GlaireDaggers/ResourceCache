@@ -40,6 +40,7 @@ namespace ResourceCache.FNA
                 using (var memStream = new MemoryStream())
                 {
                     stream.CopyTo(memStream);
+                    memStream.Seek(0, SeekOrigin.Begin);
 
                     byte[] header = new byte[4];
 
@@ -82,6 +83,7 @@ namespace ResourceCache.FNA
                 using (var memStream = new MemoryStream())
                 {
                     stream.CopyTo(memStream);
+                    memStream.Seek(0, SeekOrigin.Begin);
                     return TextureCube.DDSFromStreamEXT(game.GraphicsDevice, memStream);
                 }
             }, true);
@@ -99,7 +101,7 @@ namespace ResourceCache.FNA
         {
             SurfaceFormat format = SurfaceFormat.Color;
 
-            if(image.ColorSpace == QoiSharp.Codec.ColorSpace.SRgb)
+            if (image.ColorSpace == QoiSharp.Codec.ColorSpace.SRgb)
             {
                 format = SurfaceFormat.ColorSrgbEXT;
             }
