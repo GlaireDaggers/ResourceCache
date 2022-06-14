@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\thirdparty\FNA\FNA.Core.csproj" />
+    <ProjectReference Include="..\..\..\FNA\FNA.Core.csproj" />
     <ProjectReference Include="..\..\thirdparty\QoiSharp\QoiSharp.csproj" />
     <ProjectReference Include="..\ResourceCache.Core\ResourceCache.Core.csproj" />
   </ItemGroup>
