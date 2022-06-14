@@ -38,6 +38,19 @@ For this reason, it's a bad idea to hold a direct reference to the underlying as
 Keep in mind when you query the Value property, if the content has not finished loading, the current thread will be forced to wait until the resource has loaded. If you would like to avoid this, use the State property.
 This property will indicate what load state the resource is in, and can be used to determine whether the resource is unloaded, still loading, finished loading, or failed to load.
 
+## Content streams
+    
+If you want to just open a stream for a content file and bypass the resource loaders, you can do that too! Just use ResourceManager.Open:
+
+```csharp
+using (var stream = resourceCache.Open("content/test.txt"))
+using (var reader = new StreamReader(stream))
+{
+    string data = reader.ReadToEnd();
+    Console.Log(data);
+}
+```
+    
 ## Filesystems
 
 Another cool feature of ResourceCache was actually inspired by PhysFS, and it's that you can mount any number of abstract filesystems. An abstract filesystem is just responsible for determining whether files exist and opening streams to them. ResourceCache comes with FolderFS and ArchiveFS, which should cover most cases. FolderFS just wraps the underlying OS filesystem within a given folder, whereas ArchiveFS wraps a ZIP file and returns entries from it.
