@@ -246,6 +246,7 @@ namespace ResourceCache.Core
                     var memStream = new MemoryStream();
                     stream.CopyTo(memStream);
                     stream.Dispose();
+                    memStream.Seek(0, SeekOrigin.Begin);
                     stream = memStream;
                 }
 
