@@ -233,11 +233,22 @@ namespace ResourceCache.Core
             _logHandler.LogInfo($"Loading {type.Name} from '{path}'");
 
             var factory = _resFactories[type];
-            var stream = Open(path);
+            var stream = Open(path, out var fs);
             Task<object> loader;
 
             if (factory.threadsafe)
             {
+                if (!fs.IsThreadSafe)
+                {
+                    // if the filesystem is not thread safe, we first load the entire contents of the file into a MemoryStream,
+                    // and then pass that memorystream off to the loader task instead of the original
+
+                    var memStream = new MemoryStream();
+                    stream.CopyTo(memStream);
+                    stream.Dispose();
+                    stream = memStream;
+                }
+
                 loader = Task.Run(() =>
                 {
                     try
@@ -332,6 +343,18 @@ namespace ResourceCache.Core
         /// <exception cref="FileNotFoundException">Thrown if the file could not be found in any mounted filesystem</exception>
         public Stream Open(string path)
         {
+            return Open(path, out var _);
+        }
+
+        /// <summary>
+        /// Open a stream to the given content file
+        /// </summary>
+        /// <param name="path">Path to the content file</param>
+        /// <param name="fs">Reference to the filesystem this stream was obtained from</param>
+        /// <returns>A stream object for reading from the file</returns>
+        /// <exception cref="FileNotFoundException">Thrown if the file could not be found in any mounted filesystem</exception>
+        public Stream Open(string path, out IGameFS fs)
+        {
             foreach (var mountedFS in _fs)
             {
                 if (!path.StartsWith(mountedFS.mountPath)) continue;
@@ -344,6 +367,7 @@ namespace ResourceCache.Core
                 {
                     var stream = mountedFS.fs.OpenRead(relativePath);
                     _logHandler.LogInfo($"Found '{path}' in {mountedFS.fs.GetType().Name} mounted at '{mountedFS.mountPath}'");
+                    fs = mountedFS.fs;
                     return stream;
                 }
                 catch

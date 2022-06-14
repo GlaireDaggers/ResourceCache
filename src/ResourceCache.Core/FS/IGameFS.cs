@@ -27,6 +27,11 @@ namespace ResourceCache.Core.FS
         event AssetChangedHandler OnFileDeleted;
 
         /// <summary>
+        /// Gets whether this filesystem can safely be accessed in a multithreaded way
+        /// </summary>
+        bool IsThreadSafe { get; }
+
+        /// <summary>
         /// Check if the given file exists in this filesystem
         /// </summary>
         /// <param name="filepath">The relative path to the file</param>

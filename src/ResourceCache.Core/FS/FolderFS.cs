@@ -10,6 +10,8 @@ namespace ResourceCache.Core.FS
     /// </summary>
     public class FolderFS : IGameFS, IDisposable
     {
+        public bool IsThreadSafe => true;
+
         public event AssetChangedHandler OnFileChanged;
         public event AssetChangedHandler OnFileDeleted;
 
