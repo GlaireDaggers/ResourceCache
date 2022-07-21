@@ -59,6 +59,11 @@ namespace ResourceCache.Core
             }
         }
 
+        /// <summary>
+        /// Gets the original path string this resource was loaded from
+        /// </summary>
+        public string Path => _path;
+
         private readonly ResourceManager _resCache;
         private readonly string _path;
 
