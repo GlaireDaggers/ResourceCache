@@ -99,12 +99,8 @@ namespace ResourceCache.FNA
 
         private static Texture2D FromQoi(GraphicsDevice gd, QoiImage image)
         {
+            // TODO: originally this checked for srgb and set surface format to ColorSrgbExt, but that seems to crash in some cases?
             SurfaceFormat format = SurfaceFormat.Color;
-
-            if (image.ColorSpace == QoiSharp.Codec.ColorSpace.SRgb)
-            {
-                format = SurfaceFormat.ColorSrgbEXT;
-            }
 
             Texture2D tex = new Texture2D(gd, image.Width, image.Height, true, format);
 
