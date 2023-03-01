@@ -123,7 +123,7 @@ namespace ResourceCache.FNA
             else
             {
                 // just copy in as-is
-                tex.SetData(image.Data, 0, image.Data.Length * 4);
+                tex.SetData(image.Data, 0, image.Data.Length);
             }
 
             return tex;
