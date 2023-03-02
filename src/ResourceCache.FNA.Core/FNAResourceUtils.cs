@@ -102,7 +102,7 @@ namespace ResourceCache.FNA
             // TODO: originally this checked for srgb and set surface format to ColorSrgbExt, but that seems to crash in some cases?
             SurfaceFormat format = SurfaceFormat.Color;
 
-            Texture2D tex = new Texture2D(gd, image.Width, image.Height, true, format);
+            Texture2D tex = new Texture2D(gd, image.Width, image.Height, false, format);
 
             if (image.Channels == QoiSharp.Codec.Channels.Rgb)
             {
