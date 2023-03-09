@@ -31,7 +31,7 @@ namespace ResourceCache.FNA
                 }
 
                 return new Effect(game.GraphicsDevice, effectCode);
-            }, true);
+            }, false);
 
             // Texture2D loader
             resourceCache.RegisterFactory((stream) =>
@@ -74,7 +74,7 @@ namespace ResourceCache.FNA
                         return Texture2D.FromStream(game.GraphicsDevice, memStream);
                     }
                 }
-            }, true);
+            }, false);
 
             // TextureCube loader
             resourceCache.RegisterFactory((stream) =>
@@ -86,13 +86,13 @@ namespace ResourceCache.FNA
                     memStream.Seek(0, SeekOrigin.Begin);
                     return TextureCube.DDSFromStreamEXT(game.GraphicsDevice, memStream);
                 }
-            }, true);
+            }, false);
 
             // SoundEffect loader
             resourceCache.RegisterFactory((stream) =>
             {
                 return SoundEffect.FromStream(stream);
-            }, true);
+            }, false);
 
             // TODO: Video + Song?
         }
