@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using ResourceCache.Core.FS;
+using System.Threading;
 
 namespace ResourceCache.Core
 {
@@ -105,6 +106,8 @@ namespace ResourceCache.Core
         private Dictionary<Type, ResourceLoader> _resFactories = new Dictionary<Type, ResourceLoader>();
         private ILogHandler _logHandler;
 
+        private Queue<string> _hotReloadQueue = new Queue<string>();
+
         public ResourceManager()
         {
             _logHandler = new DefaultLogHandler();
@@ -134,6 +137,7 @@ namespace ResourceCache.Core
                 mountPath = mountPoint,
                 fs = fs
             });
+            fs.MountPoint = mountPoint;
 
             if (enableHotReload)
             {
@@ -149,11 +153,7 @@ namespace ResourceCache.Core
             if (GetLoadState(assetPath) != ResourceLoadState.Unloaded)
             {
                 _logHandler.LogInfo($"Content file {assetPath} was modified, hot-reloading");
-
-                lock (_resCache)
-                {
-                    Unload(assetPath);
-                }
+                _hotReloadQueue.Enqueue(assetPath);
             }
         }
 
@@ -218,6 +218,20 @@ namespace ResourceCache.Core
         {
             _ = GetAsync(typeof(TResource), path);
             return new ResourceHandle<TResource>(this, path);
+        }
+
+        /// <summary>
+        /// Processes assets queued for hot reload
+        /// </summary>
+        public void UpdateHotReload()
+        {
+            while(_hotReloadQueue.Count > 0)
+            {
+                lock (_resCache)
+                {
+                    Unload(_hotReloadQueue.Dequeue());
+                }
+            }
         }
 
         internal Task<object> GetAsync(Type type, string path)
@@ -369,15 +383,23 @@ namespace ResourceCache.Core
 
                 if (!mountedFS.fs.Exists(relativePath)) continue;
 
-                try
+                int retry = 0;
+
+                while (retry < 3)
                 {
-                    var stream = mountedFS.fs.OpenRead(relativePath);
-                    _logHandler.LogInfo($"Found '{path}' in {mountedFS.fs.GetType().Name} mounted at '{mountedFS.mountPath}'");
-                    fs = mountedFS.fs;
-                    return stream;
-                }
-                catch
-                {
+                    try
+                    {
+                        var stream = mountedFS.fs.OpenRead(relativePath);
+                        _logHandler.LogInfo($"Found '{path}' in {mountedFS.fs.GetType().Name} mounted at '{mountedFS.mountPath}'");
+                        fs = mountedFS.fs;
+                        return stream;
+                    }
+                    catch(Exception e)
+                    {
+                        _logHandler.LogError($"Failed opening content stream at '{path}': {e.Message}, retrying in 1s...");
+                        retry++;
+                        Thread.Sleep(1000);
+                    }
                 }
             }
 

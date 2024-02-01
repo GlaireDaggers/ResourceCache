@@ -12,6 +12,8 @@ namespace ResourceCache.Core.FS
     {
         public bool IsThreadSafe => true;
 
+        public string MountPoint { get; set; }
+
         public event AssetChangedHandler OnFileChanged;
         public event AssetChangedHandler OnFileDeleted;
 
@@ -49,12 +51,14 @@ namespace ResourceCache.Core.FS
 
         private void _fsWatcher_Deleted(object sender, FileSystemEventArgs e)
         {
-            OnFileDeleted?.Invoke(PathUtils.NormalizePathString(e.FullPath));
+            var path = Path.Combine(MountPoint, PathUtils.MakePathRelative(rootFolder, Path.GetFullPath(e.FullPath)));
+            OnFileDeleted?.Invoke(PathUtils.NormalizePathString(path));
         }
 
         private void _fsWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            OnFileChanged?.Invoke(PathUtils.NormalizePathString(e.FullPath));
+            var path = Path.Combine(MountPoint, PathUtils.MakePathRelative(rootFolder, Path.GetFullPath(e.FullPath)));
+            OnFileChanged?.Invoke(PathUtils.NormalizePathString(path));
         }
 
         public void Dispose()

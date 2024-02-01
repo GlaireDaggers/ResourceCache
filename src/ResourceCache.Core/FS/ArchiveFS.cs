@@ -13,6 +13,8 @@ namespace ResourceCache.Core.FS
     {
         public bool IsThreadSafe => false;
 
+        public string MountPoint { get; set; }
+
         public event AssetChangedHandler OnFileChanged;
         public event AssetChangedHandler OnFileDeleted;
 

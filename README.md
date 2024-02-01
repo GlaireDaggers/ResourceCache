@@ -38,6 +38,13 @@ For this reason, it's a bad idea to hold a direct reference to the underlying as
 Keep in mind when you query the Value property, if the content has not finished loading, the current thread will be forced to wait until the resource has loaded. If you would like to avoid this, use the State property.
 This property will indicate what load state the resource is in, and can be used to determine whether the resource is unloaded, still loading, finished loading, or failed to load.
 
+## Hot Reloading
+
+Speaking of hot reloading, there is one extra detail: If you enable hot reloading when mounting filesystems, you must also make sure you call
+`ResourceCache.UpdateHotReload()` regularly (for example, every frame).
+
+This function is responsible for processing any assets that need to be hot-reloaded, unloading them from the cache.
+
 ## Content streams
     
 If you want to just open a stream for a content file and bypass the resource loaders, you can do that too! Just use ResourceManager.Open:

@@ -32,6 +32,11 @@ namespace ResourceCache.Core.FS
         bool IsThreadSafe { get; }
 
         /// <summary>
+        /// Gets or sets the mount point of this filesystem
+        /// </summary>
+        string MountPoint { get; set; }
+
+        /// <summary>
         /// Check if the given file exists in this filesystem
         /// </summary>
         /// <param name="filepath">The relative path to the file</param>
