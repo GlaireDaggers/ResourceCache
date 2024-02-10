@@ -53,6 +53,11 @@ namespace ResourceCache.Core
         {
             get
             {
+                if (_resCache.GetLoadedAsset(_path, out var value))
+                {
+                    return (TResource)value;
+                }
+                
                 var task = _resCache.GetAsync(typeof(TResource), _path);
                 if (!task.IsCompleted) task.Wait();
 
@@ -80,7 +85,10 @@ namespace ResourceCache.Core
         public void Load()
         {
             // ensure that, if this asset is not in the cache, it should start loading
-            _ = _resCache.GetAsync(typeof(TResource), _path);
+            if (_resCache.GetLoadState(_path) != ResourceLoadState.Loaded)
+            {
+                _ = _resCache.GetAsync(typeof(TResource), _path);
+            }
         }
     }
 
@@ -206,6 +214,27 @@ namespace ResourceCache.Core
                 
                 return res.IsCompleted ? ResourceLoadState.Loaded : ResourceLoadState.Loading;
             }
+        }
+
+        /// <summary>
+        /// If the resource at the given path is already loaded, return it
+        /// </summary>
+        /// <param name="path">The path to the resource</param>
+        /// <param name="resource">The loaded resource</param>
+        /// <returns>True if the resource is loaded, false otherwise</returns>
+        public bool GetLoadedAsset(string path, out object resource)
+        {
+            lock (_resCache)
+            {
+                if (_resCache.TryGetValue(path, out var value))
+                {
+                    resource = value.Result;
+                    return true;
+                }
+            }
+
+            resource = default;
+            return false;
         }
 
         /// <summary>
